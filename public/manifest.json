@@ -1,0 +1,14 @@
+{
+  "name": "Token Cropper",
+  "version": "0.3.2",
+  "manifest_version": 1,
+  "description": "Crop square or round tokens with solid borders.",
+  "icon": "/toolbar-icon.svg",
+  "action": {
+    "title": "Token Cropper",
+    "icon": "/toolbar-icon.svg",
+    "popover": "/",
+    "width": 430,
+    "height": 780
+  }
+}
