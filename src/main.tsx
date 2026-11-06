@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import OBR, { buildImageUpload, buildImage } from "@owlbear-rodeo/sdk";
 import { startResponsiveActionHeight } from "./responsiveHeight";
+import { startThemeSync } from "./theme";
 import "./style.css";
 
 type Shape = "circle" | "square";
@@ -33,6 +34,7 @@ function render(ctx: CanvasRenderingContext2D, image: HTMLImageElement, shape: S
 }
 
 function App() {
+  useEffect(() => startThemeSync(), []);
   const [ready,setReady] = useState(false);
   const [image,setImage] = useState<HTMLImageElement|null>(null);
   const [name,setName] = useState("My Token");

@@ -7,7 +7,7 @@
 <p align="center">Create custom character tokens without leaving Owlbear Rodeo.</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v0.4.0-c49a38?style=flat-square" alt="Version 0.4.0">
+  <img src="https://img.shields.io/badge/version-v0.5.0-c49a38?style=flat-square" alt="Version 0.5.0">
 </p>
 
 <p align="center">
@@ -30,6 +30,7 @@ Token Craft is an Owlbear Rodeo extension for turning your artwork into custom c
 - **Add to Scene** to select your saved token and place it near the center of your view.
 - **Grid alignment** with centered image origins and size-aware placement on square grids.
 - **Responsive height requests** based on Owlbear's viewport, with native popover constraints and a 430px requested width.
+- **Native light/dark themes** that follow Owlbear Rodeo and update automatically while the extension is open.
 - **PNG download** for saving the finished artwork outside Owlbear Rodeo.
 
 ## Screenshots
@@ -73,6 +74,10 @@ Tokens use a centered image origin and retain their selected footprint on the sq
 
 Existing library assets and scene items are not automatically updated. Re-save older tokens to apply the corrected library origin.
 
+### Appearance
+
+Token Craft follows Owlbear Rodeo's light/dark setting automatically, with no separate theme toggle. Theme changes update the interface without resetting edits or changing your artwork, border-color selection, or exported PNG colors. The editor-only transparency checkerboard uses neutral light grays in light mode and retains its dark pattern in dark mode. Light mode adds a subtly raised main surface, a thin border, and soft layered shadows inside Token Craft's own frame. The gold logo's existing transparency blends into either theme. The standalone editor uses dark mode.
+
 ## Support and Feedback
 
 Found a bug or have an idea? [Open an issue](https://github.com/jakeis0dd/token-craft/issues) to report a problem, request a feature, or share feedback.
@@ -99,13 +104,15 @@ npm run preview
 
 The build checks TypeScript and writes production files to `dist/`. The preview is available at `http://localhost:4173/token-craft/`.
 
-The `/token-craft/` base path is shared by Vite and the manifest's icon and popover URLs. Branding assets live in [`public/logo.png`](public/logo.png) and [`public/toolbar-icon.svg`](public/toolbar-icon.svg). The existing [GitHub Pages workflow](.github/workflows/deploy.yml) builds and deploys `dist/` when changes are pushed to `main`; local build and preview commands do not publish changes.
+The `/token-craft/` base path is shared by Vite and the manifest's icon and popover URLs. The gold [`public/logo.png`](public/logo.png) is used for the application header and extension management card; [`public/toolbar-icon.svg`](public/toolbar-icon.svg) remains the separate toolbar icon. The existing [GitHub Pages workflow](.github/workflows/deploy.yml) builds and deploys `dist/` when changes are pushed to `main`; local build and preview commands do not publish changes.
 
 ### Test locally
 
-Version 0.4.0's responsive popover height has been verified by the developer in a live Owlbear Rodeo room with both short and tall browser windows. Use the localhost manifest above for further local testing without changing the published extension.
+Version 0.5.0's native theme synchronization has been verified by the developer in Owlbear Rodeo, and its visual refinements have been reviewed for release. Version 0.4.0's responsive popover height was verified by the developer in a live Owlbear Rodeo room with both short and tall browser windows. Use the localhost manifest above for further local testing without changing the published extension.
 
-The extension requests the height returned by [`OBR.viewport.getHeight()`](https://docs.owlbear.rodeo/extensions/apis/viewport/#getheight) through [`OBR.action.setHeight()`](https://docs.owlbear.rodeo/extensions/apis/action/#setheight). It updates on opening and checks for host height changes every 750 ms while open. Unchanged heights do not trigger another resize, SDK requests are serialized, and polling stops on close or application cleanup. The manifest retains 430px width and a 780px initial/fallback height. Styling, normal document scrolling, and the 320px crop preview are unchanged.
+The extension requests the height returned by [`OBR.viewport.getHeight()`](https://docs.owlbear.rodeo/extensions/apis/viewport/#getheight) through [`OBR.action.setHeight()`](https://docs.owlbear.rodeo/extensions/apis/action/#setheight). It updates on opening and checks for host height changes every 750 ms while open. Unchanged heights do not trigger another resize, SDK requests are serialized, and polling stops on close or application cleanup. The manifest retains 430px width and a 780px initial/fallback height. The v0.4.0 height controller, normal document scrolling, and 320px crop preview are unchanged.
+
+Theme initialization uses [`OBR.theme.getTheme()` and `OBR.theme.onChange()`](https://docs.owlbear.rodeo/extensions/apis/theme/), with newer events taking precedence over a delayed initial response. CSS variables share one layout across both modes; light mode uses Owlbear's supplied palette. The mounted editor stays briefly invisible against a transparent surface while initializing, then appears when a theme arrives or falls back to dark mode after 1.5 seconds, including if SDK readiness stalls. Later theme events can still recover from the fallback. Browser form controls use the selected `color-scheme`; native color-picker dialogs can vary by browser and operating system.
 
 Owlbear controls the final rendered dimensions and placement. The SDK does not expose the bottom toolbar's bounds or an available-height measurement for action popovers, so exact clearance above the toolbar and ellipsis button cannot be guaranteed. No parent DOM access or guessed toolbar offsets are used. If viewport height requests do not produce the desired layout, record the result for review rather than adding an offset workaround.
 
@@ -115,18 +122,21 @@ Owlbear controls the final rendered dimensions and placement. The SDK does not e
 4. **Resize and reopen:** Alternate between short and tall windows, then close the extension, resize the browser, and reopen it. Check that height updates resume, width stays approximately 430px where space permits, and the panel does not oscillate or repeatedly resize while the browser is stationary.
 5. **Token controls:** Import artwork, drag and wheel-zoom over the preview, and confirm wheel zoom does not scroll the panel. Test circle/square crops, border controls, PNG download, and Save to Library followed by Add to Scene for sizes 1×1 through 4×4; verify grid and condition-marker alignment.
 6. **Fallback:** Also open the standalone local editor to check PNG export without Owlbear, and try the extension in a room with no scene open. If an SDK height request fails, the current/native fallback size is retained and a warning appears in the browser console.
+7. **Live theme changes:** With artwork loaded and unsaved changes, switch Owlbear between light and dark. Check that the interface updates immediately, the chosen border color and token settings stay intact, and the save/placement workflow is unaffected. Compare PNG exports before and after switching; the token artwork and colors should match. Check selected controls, status text, disabled buttons, keyboard focus, and the native color picker in each mode.
+8. **Opening and layout:** Close and reopen the extension in each theme, checking for incorrect-theme flashes or a lingering blank surface. Repeat theme changes in both short and tall browser windows, verifying scrolling, preview size, wheel zoom, and responsive height. Review the light-mode surface border and shadows, readable empty-preview text on each checkerboard, and the logo's transparent exterior. Owlbear owns the outer popover frame and may clip shadows at the iframe boundary.
 
-Run the focused height-controller tests with the existing development dependencies:
+Run the theme and height-controller tests with the existing development dependencies:
 
 ```bash
-node --test tests/responsiveHeight.test.mjs
+node --test tests/*.test.mjs
 ```
 
-These tests cover resize requests, unchanged heights, open/close cleanup, delayed SDK calls, stale results, and failure recovery with mocked APIs and timers. Actual host clamping, toolbar clearance, browser scrolling, and wheel interactions require live-room testing.
+These tests cover initial and live themes, initialization races, subscription cleanup, safe fallback, button-text contrast, resize requests, unchanged heights, delayed SDK calls, and failure recovery with mocked APIs and timers. Native host behavior, first-paint appearance, browser controls, scrolling, and wheel interactions also require live-room testing.
 
 <details>
 <summary>Release history and validation</summary>
 
+- **v0.5.0:** Adds automatic native Owlbear light/dark themes with semantic CSS variables, live SDK subscriptions, initialization race protection, a bounded dark fallback, and visible keyboard focus indicators. Preserves dark styling closely while improving enabled-button text contrast. Light mode adds subtle panel elevation and a lighter editor-only checkerboard; the header logo uses its existing transparency without a dark CSS backdrop. The extension management card uses the gold logo while retaining the separate toolbar icon. Token data, rendering, source artwork, and the responsive-height controller are unchanged. Native theme synchronization was live-tested, and the visual refinements were reviewed for release.
 - **v0.4.0:** Adds responsive action-height requests using documented Owlbear SDK APIs. Polls the host viewport every 750 ms only while open, skips redundant resizes, and serializes pending requests. Retains the existing styling, token workflow, and v0.3.3 grid-alignment correction. The developer verified correct responsive sizing in a live Owlbear Rodeo room with both short and tall browser windows.
 - **v0.3.3:** Corrects token grid alignment in Save to Library and Add to Scene. Both paths use the image center as the snapping and rotation origin: `(256, 256)` for the exported 512×512 image. DPI remains `512 / gridSize`, preserving all four footprints. Scene placement converts the screen center to scene coordinates before snapping; other grid types use the SDK's corner and center targets. Crop, zoom, borders, artwork, and PNG export are unchanged.
 - **Validation:** The v0.3.3 production build passed. A one-off regression harness exercised the application handlers and installed SDK builders with mocked Owlbear APIs; all 36 combinations of four token sizes, three scene DPIs (70/150/300), and three pan/zoom configurations passed. Live-room testing of the v0.3.3 correction remains pending, including library dragging, rotation, and condition-marker alignment.
