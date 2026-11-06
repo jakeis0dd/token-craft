@@ -1,6 +1,8 @@
-# Token Cropper v0.3.0
+# Token Craft v0.3.2
 
-Owlbear Rodeo token cropper. Upload an image, drag to reposition, zoom with the wheel, select circle or square, choose a solid border color, and set 1×1–4×4 grid size.
+Token Craft is an Owlbear Rodeo extension built with Vite, TypeScript, React, and the Owlbear Rodeo SDK. Import an image or select an existing image, drag to reposition, zoom with the wheel, select circle or square, choose a border color and thickness, and set 1×1–4×4 grid size.
+
+Repository: [jakeis0dd/token-craft](https://github.com/jakeis0dd/token-craft).
 
 ## Run locally
 Install Node.js, open this folder in VS Code, and run:
@@ -8,7 +10,23 @@ Install Node.js, open this folder in VS Code, and run:
 npm install
 npm run dev
 ```
-Install `http://localhost:5173/manifest.json` as a custom extension in Owlbear Rodeo. Keep Vite running during local use.
+Install `http://localhost:5173/token-craft/manifest.json` as a custom extension in Owlbear Rodeo. Keep Vite running during local use. The standalone preview is at `http://localhost:5173/token-craft/`.
+
+## Production build and GitHub Pages
+```bash
+npm run build
+npm run preview
+```
+The build runs TypeScript checking and writes the production files to `dist/`. Open `http://localhost:4173/token-craft/` to preview the build locally.
+
+Vite uses `/token-craft/` as its base path in development and production. The manifest's icon and popover paths use the same prefix, and the header logo uses Vite's base URL. These paths target the following URLs after `dist/` is published to GitHub Pages:
+
+- Extension: `https://jakeis0dd.github.io/token-craft/`
+- Install manifest: `https://jakeis0dd.github.io/token-craft/manifest.json`
+- Toolbar icon: `https://jakeis0dd.github.io/token-craft/toolbar-icon.svg`
+- Header logo: `https://jakeis0dd.github.io/token-craft/logo.png`
+
+Building and previewing do not deploy the extension. Publishing the contents of `dist/` requires a separate deployment step.
 
 ## Library and scene workflow
 1. Crop a token and click **Save to Library**. The upload is submitted with the `CHARACTER` asset type.
@@ -22,7 +40,7 @@ Changing the token settings or image disables scene placement until saved again.
 - `public/logo.png`: full-color extension logo.
 
 ## Status
-Scene placement is unverified and should be tested inside Owlbear Rodeo before release. Library saving and grid sizing should also be checked in a live room.
+Version 0.3.2 has been verified by the developer inside Owlbear Rodeo, including image import and selection, drag positioning, wheel zoom, circle and square cropping, border controls, 1×1–4×4 sizing, Save to Library, and Add to Scene. The renamed GitHub Pages build still needs a live-room check after deployment.
 
 
 ## v0.3.1

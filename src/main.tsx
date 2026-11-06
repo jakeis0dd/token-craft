@@ -139,7 +139,7 @@ function App() {
     catch(e) {setMessage(String(e));}
   }
   return <main>
-    <header><div className="logo"><img src="/logo.png" alt="Token Cropper logo"/></div><div><h1>Token Cropper</h1><small>Simple tokens for Owlbear Rodeo</small></div></header>
+    <header><div className="logo"><img src={`${import.meta.env.BASE_URL}logo.png`} alt="Token Craft logo"/></div><div><h1>Token Craft</h1><small>Simple tokens for Owlbear Rodeo</small></div></header>
     <div className="sources"><button onClick={()=>input.current?.click()}>＋ Import new image</button><button onClick={pickExisting} disabled={!ready}>▧ Existing image</button></div>
     <input ref={input} hidden type="file" accept="image/*" onChange={async e=>{const f=e.target.files?.[0];if(f)try{await loadFile(f);}catch(err){setMessage(String(err));}e.target.value="";}}/>
     <section className="preview"><canvas ref={canvas} width={PREVIEW} height={PREVIEW} style={{touchAction:"none",cursor:image?"grab":"default"}} onPointerDown={e=>{if(!image)return;e.currentTarget.setPointerCapture(e.pointerId);drag.current={x:e.clientX,y:e.clientY,ox:offset.x,oy:offset.y};}} onPointerMove={e=>{if(!drag.current)return;const r=e.currentTarget.getBoundingClientRect();setOffset({x:drag.current.ox+(e.clientX-drag.current.x)*SIZE/r.width,y:drag.current.oy+(e.clientY-drag.current.y)*SIZE/r.height});}} onPointerUp={()=>drag.current=null} onPointerCancel={()=>drag.current=null} />
