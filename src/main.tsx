@@ -105,7 +105,8 @@ function App() {
     setBusy(true); setMessage("");
     try {
       const file=await makeFile();
-      await OBR.assets.uploadImages([buildImageUpload(file).name(name).dpi(SIZE/gridSize).build()],"CHARACTER");
+      // Use the image center as the snapping/rotation origin, in image pixels.
+      await OBR.assets.uploadImages([buildImageUpload(file).name(name).dpi(SIZE/gridSize).offset({x:SIZE/2,y:SIZE/2}).build()],"CHARACTER");
       setSavedSignature(signature);
       setMessage("Upload completed. Find your token in Characters. Add to Scene is now available; you will select the saved token in Owlbear’s picker.");
     } catch(e) { setMessage("Library save failed: "+String(e)); }
@@ -124,11 +125,19 @@ function App() {
         return;
       }
       const selected=picked[0];
-      const center=await OBR.viewport.getPosition();
+      const [width,height,gridType]=await Promise.all([
+        OBR.viewport.getWidth(),OBR.viewport.getHeight(),OBR.scene.grid.getType()
+      ]);
+      const center=await OBR.viewport.inverseTransformPoint({x:width/2,y:height/2});
+      // On square grids, odd footprints center in a cell; even ones at a corner.
+      const even=gridSize%2===0;
+      const position=await OBR.scene.grid.snapPosition(
+        center,1,gridType==="SQUARE"?even:true,gridType==="SQUARE"?!even:true
+      );
       const item=buildImage(
         {width:selected.image.width,height:selected.image.height,mime:selected.image.mime,url:selected.image.url},
-        {dpi:SIZE/gridSize,offset:{x:0,y:0}}
-      ).name(selected.name).layer("CHARACTER").position(center).build();
+        {dpi:SIZE/gridSize,offset:{x:selected.image.width/2,y:selected.image.height/2}}
+      ).name(selected.name).layer("CHARACTER").position(position).build();
       await OBR.scene.items.addItems([item]);
       setMessage(`Added selected image to the scene at ${gridSize}×${gridSize} grid squares.`);
     } catch(e) {setMessage("Scene placement failed: "+String(e)+" You can still drag your saved token from Characters.");}

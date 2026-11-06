@@ -1,6 +1,6 @@
 {
   "name": "Token Craft",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "manifest_version": 1,
   "description": "Crop square or round tokens with solid borders.",
   "icon": "/token-craft/toolbar-icon.svg",
