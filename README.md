@@ -35,11 +35,14 @@ Token Craft is an Owlbear Rodeo extension for turning your artwork into custom c
 
 ## Screenshots
 
-<p align="center">
-  <img src="screenshots/RogueToken.png" alt="Token Craft inside Owlbear Rodeo showing a rogue portrait with a circular crop and red border" width="380">
-</p>
+<table align="center">
+  <tr>
+    <td align="center"><img src="screenshots/DarkMode.png" alt="Token Craft in dark mode with a rogue token and red border" width="300" height="700"></td>
+    <td align="center"><img src="screenshots/LightMode.png" alt="Token Craft in light mode with a monk token and blue border" width="300" height="700"></td>
+  </tr>
+</table>
 
-<p align="center"><em>Creating a rogue character token with a circular crop and red border inside Owlbear Rodeo.</em></p>
+<p align="center"><em>The Token Craft editor in Owlbear Rodeo's dark and light themes.</em></p>
 
 ## Installation
 
