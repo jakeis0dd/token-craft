@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import OBR, { buildImageUpload, buildImage } from "@owlbear-rodeo/sdk";
+import { startResponsiveActionHeight } from "./responsiveHeight";
 import "./style.css";
 
 type Shape = "circle" | "square";
@@ -63,6 +64,10 @@ function App() {
     if (!OBR.isAvailable) return;
     return OBR.onReady(() => setReady(true));
   }, []);
+  useEffect(() => {
+    if (!ready) return;
+    return startResponsiveActionHeight();
+  }, [ready]);
   useEffect(() => {
     const ctx=canvas.current?.getContext("2d");
     if(ctx && image) render(ctx,image,shape,color,border,zoom,offset,PREVIEW);
