@@ -34,9 +34,11 @@ Token Craft is an Owlbear Rodeo extension for turning your artwork into custom c
 
 ## Screenshots
 
-> **Screenshot placeholder**
->
-> Add real screenshots of the Token Craft editor and finished tokens aligned with an Owlbear Rodeo grid. Suggested locations: `docs/screenshots/editor.png` and `docs/screenshots/grid-alignment.png`. Replace this placeholder with relative Markdown image links once those files are added.
+<p align="center">
+  <img src="screenshots/RogueToken.png" alt="Token Craft inside Owlbear Rodeo showing a rogue portrait with a circular crop and red border" width="380">
+</p>
+
+<p align="center"><em>Creating a rogue character token with a circular crop and red border inside Owlbear Rodeo.</em></p>
 
 ## Installation
 
