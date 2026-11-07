@@ -41,12 +41,14 @@ function App() {
   const [shape,setShape] = useState<Shape>("circle");
   const [color,setColor] = useState("#f5c84b");
   const [border,setBorder] = useState(12);
+  const [noBorder,setNoBorder] = useState(false);
+  const effectiveBorder = noBorder ? 0 : border;
   const [gridSize,setGridSize] = useState(1);
   const [zoom,setZoom] = useState(1);
   const [offset,setOffset] = useState({x:0,y:0});
   const [busy,setBusy] = useState(false);
   const [savedSignature,setSavedSignature] = useState<string|null>(null);
-  const signature = JSON.stringify({name,shape,color,border,gridSize,zoom,offset,image: image?.src});
+  const signature = JSON.stringify({name,shape,color,border,noBorder,gridSize,zoom,offset,image: image?.src});
   const savedCurrent = savedSignature === signature;
   const [message,setMessage] = useState("");
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -72,9 +74,9 @@ function App() {
   }, [ready]);
   useEffect(() => {
     const ctx=canvas.current?.getContext("2d");
-    if(ctx && image) render(ctx,image,shape,color,border,zoom,offset,PREVIEW);
+    if(ctx && image) render(ctx,image,shape,color,effectiveBorder,zoom,offset,PREVIEW);
     else ctx?.clearRect(0,0,PREVIEW,PREVIEW);
-  },[image,shape,color,border,zoom,offset]);
+  },[image,shape,color,effectiveBorder,zoom,offset]);
 
   async function loadUrl(url:string, label:string) {
     const img=new Image();
@@ -103,7 +105,7 @@ function App() {
   async function makeFile() {
     if(!image) throw new Error("Choose an image first.");
     const output=document.createElement("canvas"); output.width=output.height=SIZE;
-    render(output.getContext("2d")!,image,shape,color,border,zoom,offset,SIZE);
+    render(output.getContext("2d")!,image,shape,color,effectiveBorder,zoom,offset,SIZE);
     const blob=await new Promise<Blob>((resolve,reject)=>output.toBlob(b=>b?resolve(b):reject(new Error("PNG export failed.")),"image/png"));
     return new File([blob],`${name.trim() || "Token"}.png`,{type:"image/png"});
   }
@@ -165,7 +167,7 @@ function App() {
     <label>Token name<input value={name} onChange={e=>setName(e.target.value)} maxLength={80}/></label>
     <div className="line"><span>Crop shape</span><div className="switch"><button className={shape==="circle"?"active":""} onClick={()=>setShape("circle")}>◯ Circle</button><button className={shape==="square"?"active":""} onClick={()=>setShape("square")}>□ Square</button></div></div>
     <div className="line"><span>Token size</span><div className="switch">{[1,2,3,4].map(n=><button key={n} className={gridSize===n?"active":""} onClick={()=>setGridSize(n)}>{n}×{n}</button>)}</div></div>
-    <div className="line"><span>Border color</span><div className="colors">{["#e45c5c","#48b878","#4c95ef","#f5c84b","#15191f"].map(c=><button key={c} aria-label={c} className={color===c?"chosen":""} style={{background:c}} onClick={()=>setColor(c)}/>)}<input aria-label="Custom border color" type="color" value={color} onChange={e=>setColor(e.target.value)}/></div></div>
+    <div className="line"><span>Border color</span><div className="colors">{["#e45c5c","#48b878","#4c95ef","#f5c84b"].map(c=><button key={c} aria-label={c} aria-pressed={!noBorder&&color===c} className={!noBorder&&color===c?"chosen":""} style={{background:c}} onClick={()=>{setColor(c);setNoBorder(false);}}/>)}<button type="button" aria-label="No Border" title="No Border" aria-pressed={noBorder} className={`no-border${noBorder?" chosen":""}`} onClick={()=>setNoBorder(true)}/><input aria-label="Custom border color" type="color" value={color} onChange={e=>{setColor(e.target.value);setNoBorder(false);}}/></div></div>
     <label className="range">Border thickness <strong>{border}px</strong><input type="range" min="0" max="48" value={border} onChange={e=>setBorder(Number(e.target.value))}/></label>
     <label className="range">Zoom <strong>{zoom.toFixed(2)}×</strong><input type="range" min="1" max="4" step=".01" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label>
     <div className="actions"><button disabled={!image||busy||!ready} onClick={saveLibrary}>Save to Library</button><button className="primary" disabled={!image||busy||!ready||!savedCurrent} onClick={addScene}>Add to Scene</button></div>

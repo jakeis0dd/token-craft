@@ -7,7 +7,7 @@
 <p align="center">Create custom character tokens without leaving Owlbear Rodeo.</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v0.5.0-c49a38?style=flat-square" alt="Version 0.5.0">
+  <img src="https://img.shields.io/badge/version-v0.6.0-c49a38?style=flat-square" alt="Version 0.6.0">
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@ Token Craft is an Owlbear Rodeo extension for turning your artwork into custom c
 
 - **Circle and square crops** for character portraits and other artwork.
 - **Drag to position and scroll to zoom**, with a zoom slider for finer adjustments.
-- **Solid borders** with adjustable thickness, preset colors, and a custom color picker.
+- **Border options** with adjustable thickness, preset colors, a custom color picker, and **No Border** for a full crop without an outline.
 - **Four token sizes:** 1×1, 2×2, 3×3, and 4×4 grid squares.
 - **Save to Library** to store your finished token in Owlbear Rodeo's Characters library.
 - **Add to Scene** to select your saved token and place it near the center of your view.
@@ -63,7 +63,7 @@ You can also [open the manifest](https://jakeis0dd.github.io/token-craft/manifes
 
 1. **Choose your artwork.** Click **Import new image** to upload a file, or **Existing image** to choose an image from your Characters library.
 2. **Frame the token.** Choose a circle or square crop. Drag the image to position it, then scroll over the preview or use the **Zoom** slider to adjust the framing.
-3. **Customize the finish.** Give the token a name, select a size from **1×1** through **4×4**, and choose your border color and thickness.
+3. **Customize the finish.** Give the token a name, select a size from **1×1** through **4×4**, and choose your border color and thickness. Select the checkerboard-and-slash **No Border** swatch to remove the outline; choosing a color again restores your stored thickness.
 4. **Save your token.** Click **Save to Library** and wait for the upload to complete. Your token is saved as a Character asset.
 5. **Place it in your game.** With a scene open, click **Add to Scene** and select the token you just saved in Owlbear Rodeo's image picker. You can also drag the saved token from Characters onto the scene.
 
@@ -111,7 +111,7 @@ The `/token-craft/` base path is shared by Vite and the manifest's icon and popo
 
 ### Test locally
 
-Version 0.5.0's native theme synchronization has been verified by the developer in Owlbear Rodeo, and its visual refinements have been reviewed for release. Version 0.4.0's responsive popover height was verified by the developer in a live Owlbear Rodeo room with both short and tall browser windows. Use the localhost manifest above for further local testing without changing the published extension.
+Version 0.6.0's No Border feature has passed live testing in Owlbear Rodeo. Native theme synchronization from v0.5.0 and responsive popover height from v0.4.0 were previously verified by the developer in live rooms. Use the localhost manifest above for further local testing without changing the published extension.
 
 The extension requests the height returned by [`OBR.viewport.getHeight()`](https://docs.owlbear.rodeo/extensions/apis/viewport/#getheight) through [`OBR.action.setHeight()`](https://docs.owlbear.rodeo/extensions/apis/action/#setheight). It updates on opening and checks for host height changes every 750 ms while open. Unchanged heights do not trigger another resize, SDK requests are serialized, and polling stops on close or application cleanup. The manifest retains 430px width and a 780px initial/fallback height. The v0.4.0 height controller, normal document scrolling, and 320px crop preview are unchanged.
 
@@ -134,11 +134,12 @@ Run the theme and height-controller tests with the existing development dependen
 node --test tests/*.test.mjs
 ```
 
-These tests cover initial and live themes, initialization races, subscription cleanup, safe fallback, button-text contrast, resize requests, unchanged heights, delayed SDK calls, and failure recovery with mocked APIs and timers. Native host behavior, first-paint appearance, browser controls, scrolling, and wheel interactions also require live-room testing.
+These tests cover No Border crop coverage, remembered thickness, saved-token invalidation, all four token sizes, initial and live themes, initialization races, subscription cleanup, safe fallback, button-text contrast, resize requests, unchanged heights, delayed SDK calls, and failure recovery with mocked APIs and timers. Native host behavior, first-paint appearance, browser controls, scrolling, and wheel interactions also require live-room testing.
 
 <details>
 <summary>Release history and validation</summary>
 
+- **v0.6.0:** Replaces the black border preset with a theme-aware checkerboard-and-slash **No Border** option. Circle and square crops fill their full footprint without a stroke or invisible inset in previews and exported PNGs. Border thickness and color are remembered when switching back to a colored border, and custom black remains available through the color picker. Changing No Border requires re-saving before Add to Scene. Includes 14 new regression tests covering both crop shapes, thickness restoration, save-state tracking, and all four token sizes. The No Border feature passed live testing in Owlbear Rodeo.
 - **v0.5.0:** Adds automatic native Owlbear light/dark themes with semantic CSS variables, live SDK subscriptions, initialization race protection, a bounded dark fallback, and visible keyboard focus indicators. Preserves dark styling closely while improving enabled-button text contrast. Light mode adds subtle panel elevation and a lighter editor-only checkerboard; the header logo uses its existing transparency without a dark CSS backdrop. The extension management card uses the gold logo while retaining the separate toolbar icon. Token data, rendering, source artwork, and the responsive-height controller are unchanged. Native theme synchronization was live-tested, and the visual refinements were reviewed for release.
 - **v0.4.0:** Adds responsive action-height requests using documented Owlbear SDK APIs. Polls the host viewport every 750 ms only while open, skips redundant resizes, and serializes pending requests. Retains the existing styling, token workflow, and v0.3.3 grid-alignment correction. The developer verified correct responsive sizing in a live Owlbear Rodeo room with both short and tall browser windows.
 - **v0.3.3:** Corrects token grid alignment in Save to Library and Add to Scene. Both paths use the image center as the snapping and rotation origin: `(256, 256)` for the exported 512×512 image. DPI remains `512 / gridSize`, preserving all four footprints. Scene placement converts the screen center to scene coordinates before snapping; other grid types use the SDK's corner and center targets. Crop, zoom, borders, artwork, and PNG export are unchanged.
