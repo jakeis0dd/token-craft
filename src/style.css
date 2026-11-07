@@ -127,6 +127,8 @@ label > input:not([type=range]) { display: block; width: 100%; margin-top: 7px; 
 .primary:disabled { background: var(--disabled-primary-bg); border-color: var(--disabled-primary-border); }
 .download { width: 100%; margin-top: 9px; background: transparent; }
 .message { color: var(--status-text); font-size: 12px; line-height: 1.5; }
+.source-message { margin: 8px 0 0; overflow-wrap: anywhere; }
+.source-message:empty { display: none; }
 
 .sources button:not(:disabled):hover,
 .switch button:not(.active):not(:disabled):hover,

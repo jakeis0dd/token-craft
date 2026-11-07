@@ -7,7 +7,7 @@
 <p align="center">Create custom character tokens without leaving Owlbear Rodeo.</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v0.6.0-c49a38?style=flat-square" alt="Version 0.6.0">
+  <img src="https://img.shields.io/badge/version-v0.6.1-c49a38?style=flat-square" alt="Version 0.6.1">
 </p>
 
 <p align="center">
@@ -69,6 +69,8 @@ You can also [open the manifest](https://jakeis0dd.github.io/token-craft/manifes
 
 Changing the artwork or any token setting requires another **Save to Library** before **Add to Scene** is available. Selecting the saved token in the picker is part of the placement workflow; the upload does not automatically select it for you. Folder selection and picker behavior are handled by Owlbear Rodeo.
 
+**Existing image** opens the Characters picker without a prefilled search. Progress, cancellation, and errors appear directly below the image buttons. Failed imports preserve your current artwork and edits; potentially sensitive error details are omitted.
+
 Use **Download PNG** whenever you want a local copy. The [standalone editor](https://jakeis0dd.github.io/token-craft/) supports PNG export; library access and scene placement require opening the extension inside an Owlbear Rodeo room.
 
 ### Grid alignment
@@ -111,7 +113,7 @@ The `/token-craft/` base path is shared by Vite and the manifest's icon and popo
 
 ### Test locally
 
-Version 0.6.0's No Border feature has passed live testing in Owlbear Rodeo. Native theme synchronization from v0.5.0 and responsive popover height from v0.4.0 were previously verified by the developer in live rooms. Use the localhost manifest above for further local testing without changing the published extension.
+Version 0.6.1's Existing Image picker fix has passed live testing in Owlbear Rodeo. The No Border feature from v0.6.0, native theme synchronization from v0.5.0, and responsive popover height from v0.4.0 were previously verified by the developer in live rooms. Use the localhost manifest above for further local testing without changing the published extension.
 
 The extension requests the height returned by [`OBR.viewport.getHeight()`](https://docs.owlbear.rodeo/extensions/apis/viewport/#getheight) through [`OBR.action.setHeight()`](https://docs.owlbear.rodeo/extensions/apis/action/#setheight). It updates on opening and checks for host height changes every 750 ms while open. Unchanged heights do not trigger another resize, SDK requests are serialized, and polling stops on close or application cleanup. The manifest retains 430px width and a 780px initial/fallback height. The v0.4.0 height controller, normal document scrolling, and 320px crop preview are unchanged.
 
@@ -128,17 +130,18 @@ Owlbear controls the final rendered dimensions and placement. The SDK does not e
 7. **Live theme changes:** With artwork loaded and unsaved changes, switch Owlbear between light and dark. Check that the interface updates immediately, the chosen border color and token settings stay intact, and the save/placement workflow is unaffected. Compare PNG exports before and after switching; the token artwork and colors should match. Check selected controls, status text, disabled buttons, keyboard focus, and the native color picker in each mode.
 8. **Opening and layout:** Close and reopen the extension in each theme, checking for incorrect-theme flashes or a lingering blank surface. Repeat theme changes in both short and tall browser windows, verifying scrolling, preview size, wheel zoom, and responsive height. Review the light-mode surface border and shadows, readable empty-preview text on each checkerboard, and the logo's transparent exterior. Owlbear owns the outer popover frame and may clip shadows at the iframe boundary.
 
-Run the theme and height-controller tests with the existing development dependencies:
+Run all automated tests with the existing development dependencies:
 
 ```bash
 node --test tests/*.test.mjs
 ```
 
-These tests cover No Border crop coverage, remembered thickness, saved-token invalidation, all four token sizes, initial and live themes, initialization races, subscription cleanup, safe fallback, button-text contrast, resize requests, unchanged heights, delayed SDK calls, and failure recovery with mocked APIs and timers. Native host behavior, first-paint appearance, browser controls, scrolling, and wheel interactions also require live-room testing.
+These tests cover the Existing Image picker arguments and empty-search validation regression, nearby feedback, duplicate-request protection, failed-import preservation, bounded nested-error formatting, privacy filtering, No Border crop coverage, remembered thickness, saved-token invalidation, all four token sizes, initial and live themes, initialization races, subscription cleanup, safe fallback, button-text contrast, resize requests, unchanged heights, delayed SDK calls, and failure recovery with mocked APIs and timers. Native host behavior, first-paint appearance, browser controls, scrolling, and wheel interactions also require live-room testing.
 
 <details>
 <summary>Release history and validation</summary>
 
+- **v0.6.1:** Fixes Existing Image by leaving the optional SDK search argument unset (`undefined`) while preserving the Characters category hint. Owlbear rejected the previous empty search string before opening its picker. Adds nearby progress and cancellation feedback, duplicate-request protection, distinct picker/loading errors, and bounded nested-error formatting that omits potentially sensitive details. Failed imports preserve artwork and edits. The picker fix passed live testing in Owlbear Rodeo; automated coverage includes the installed SDK adapter and simulated host validation.
 - **v0.6.0:** Replaces the black border preset with a theme-aware checkerboard-and-slash **No Border** option. Circle and square crops fill their full footprint without a stroke or invisible inset in previews and exported PNGs. Border thickness and color are remembered when switching back to a colored border, and custom black remains available through the color picker. Changing No Border requires re-saving before Add to Scene. Includes 14 new regression tests covering both crop shapes, thickness restoration, save-state tracking, and all four token sizes. The No Border feature passed live testing in Owlbear Rodeo.
 - **v0.5.0:** Adds automatic native Owlbear light/dark themes with semantic CSS variables, live SDK subscriptions, initialization race protection, a bounded dark fallback, and visible keyboard focus indicators. Preserves dark styling closely while improving enabled-button text contrast. Light mode adds subtle panel elevation and a lighter editor-only checkerboard; the header logo uses its existing transparency without a dark CSS backdrop. The extension management card uses the gold logo while retaining the separate toolbar icon. Token data, rendering, source artwork, and the responsive-height controller are unchanged. Native theme synchronization was live-tested, and the visual refinements were reviewed for release.
 - **v0.4.0:** Adds responsive action-height requests using documented Owlbear SDK APIs. Polls the host viewport every 750 ms only while open, skips redundant resizes, and serializes pending requests. Retains the existing styling, token workflow, and v0.3.3 grid-alignment correction. The developer verified correct responsive sizing in a live Owlbear Rodeo room with both short and tall browser windows.

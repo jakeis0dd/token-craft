@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import OBR, { buildImageUpload, buildImage } from "@owlbear-rodeo/sdk";
 import { startResponsiveActionHeight } from "./responsiveHeight";
 import { startThemeSync } from "./theme";
+import { formatImportError } from "./importError";
 import "./style.css";
 
 type Shape = "circle" | "square";
@@ -51,6 +52,9 @@ function App() {
   const signature = JSON.stringify({name,shape,color,border,noBorder,gridSize,zoom,offset,image: image?.src});
   const savedCurrent = savedSignature === signature;
   const [message,setMessage] = useState("");
+  const [existingMessage,setExistingMessage] = useState("");
+  const [existingBusy,setExistingBusy] = useState(false);
+  const existingRequest = useRef(false);
   const canvas = useRef<HTMLCanvasElement>(null);
   const drag = useRef<{x:number;y:number;ox:number;oy:number}|null>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -79,6 +83,7 @@ function App() {
   },[image,shape,color,effectiveBorder,zoom,offset]);
 
   async function loadUrl(url:string, label:string) {
+    const tokenName=label.replace(/\.[^.]+$/,"") || "My Token";
     const img=new Image();
     img.crossOrigin="anonymous";
     img.src=url;
@@ -87,7 +92,7 @@ function App() {
     const test=document.createElement("canvas"); test.width=test.height=1;
     const context=test.getContext("2d")!;
     context.drawImage(img,0,0,1,1); context.getImageData(0,0,1,1);
-    setImage(img); setName(label.replace(/\.[^.]+$/,"") || "My Token");
+    setImage(img); setName(tokenName);
     setZoom(1); setOffset({x:0,y:0}); setMessage("");
   }
   async function loadFile(file:File) {
@@ -96,11 +101,44 @@ function App() {
     try { await loadUrl(url,file.name); } finally { URL.revokeObjectURL(url); }
   }
   async function pickExisting() {
-    if(!ready) return setMessage("Open this extension inside Owlbear Rodeo to select existing images.");
+    if(existingRequest.current || busy) return;
+    if(!ready) return setExistingMessage("Open this extension inside Owlbear Rodeo to select existing images.");
+    // The ref also guards a second click before React renders the disabled state.
+    existingRequest.current=true;
+    setExistingBusy(true);
+    setExistingMessage("Opening Owlbear image library…");
     try {
-      const picked=await OBR.assets.downloadImages(false,"","CHARACTER");
-      if(picked.length) await loadUrl(picked[0].image.url,picked[0].name);
-    } catch(e) { setMessage("Cannot read that image (possibly a CORS restriction): "+String(e)); }
+      let picked: Awaited<ReturnType<typeof OBR.assets.downloadImages>>;
+      try {
+        // Leave the optional search unset: Owlbear rejects an empty string.
+        picked=await OBR.assets.downloadImages(false,undefined,"CHARACTER");
+        if(!Array.isArray(picked)) throw new Error("Owlbear returned an invalid image selection.");
+      } catch(e) {
+        setExistingMessage("Owlbear image picker failed: "+formatImportError(e));
+        return;
+      }
+      if(!picked.length) {
+        setExistingMessage("No image selected. Your current token is unchanged.");
+        return;
+      }
+      try {
+        const selected=picked[0];
+        if(!selected || typeof selected.name!=="string" || typeof selected.image?.url!=="string" || !selected.image.url.trim()) {
+          throw new Error("Owlbear returned an image without a valid name or source URL.");
+        }
+        if(typeof selected.image.mime!=="string" || !selected.image.mime.toLowerCase().startsWith("image/")) {
+          throw new Error("Choose an image asset. Video and other media formats are not supported.");
+        }
+        setExistingMessage("Loading selected image…");
+        await loadUrl(selected.image.url,selected.name);
+        setExistingMessage("Image loaded.");
+      } catch(e) {
+        setExistingMessage("Selected image could not be loaded: "+formatImportError(e));
+      }
+    } finally {
+      existingRequest.current=false;
+      setExistingBusy(false);
+    }
   }
   async function makeFile() {
     if(!image) throw new Error("Choose an image first.");
@@ -158,7 +196,8 @@ function App() {
   }
   return <main>
     <header><div className="logo"><img src={`${import.meta.env.BASE_URL}logo.png`} alt="Token Craft logo"/></div><div><h1>Token Craft</h1><small>Simple tokens for Owlbear Rodeo</small></div></header>
-    <div className="sources"><button onClick={()=>input.current?.click()}>＋ Import new image</button><button onClick={pickExisting} disabled={!ready}>▧ Existing image</button></div>
+    <div className="sources"><button disabled={existingBusy} onClick={()=>input.current?.click()}>＋ Import new image</button><button onClick={pickExisting} disabled={!ready||busy||existingBusy} aria-busy={existingBusy} aria-describedby="existing-image-status">▧ Existing image</button></div>
+    <p id="existing-image-status" role="status" aria-atomic="true" className="message source-message">{existingMessage}</p>
     <input ref={input} hidden type="file" accept="image/*" onChange={async e=>{const f=e.target.files?.[0];if(f)try{await loadFile(f);}catch(err){setMessage(String(err));}e.target.value="";}}/>
     <section className="preview"><canvas ref={canvas} width={PREVIEW} height={PREVIEW} style={{touchAction:"none",cursor:image?"grab":"default"}} onPointerDown={e=>{if(!image)return;e.currentTarget.setPointerCapture(e.pointerId);drag.current={x:e.clientX,y:e.clientY,ox:offset.x,oy:offset.y};}} onPointerMove={e=>{if(!drag.current)return;const r=e.currentTarget.getBoundingClientRect();setOffset({x:drag.current.ox+(e.clientX-drag.current.x)*SIZE/r.width,y:drag.current.oy+(e.clientY-drag.current.y)*SIZE/r.height});}} onPointerUp={()=>drag.current=null} onPointerCancel={()=>drag.current=null} />
       {!image&&<div className="empty">Import an image to start</div>}
@@ -170,7 +209,7 @@ function App() {
     <div className="line"><span>Border color</span><div className="colors">{["#e45c5c","#48b878","#4c95ef","#f5c84b"].map(c=><button key={c} aria-label={c} aria-pressed={!noBorder&&color===c} className={!noBorder&&color===c?"chosen":""} style={{background:c}} onClick={()=>{setColor(c);setNoBorder(false);}}/>)}<button type="button" aria-label="No Border" title="No Border" aria-pressed={noBorder} className={`no-border${noBorder?" chosen":""}`} onClick={()=>setNoBorder(true)}/><input aria-label="Custom border color" type="color" value={color} onChange={e=>{setColor(e.target.value);setNoBorder(false);}}/></div></div>
     <label className="range">Border thickness <strong>{border}px</strong><input type="range" min="0" max="48" value={border} onChange={e=>setBorder(Number(e.target.value))}/></label>
     <label className="range">Zoom <strong>{zoom.toFixed(2)}×</strong><input type="range" min="1" max="4" step=".01" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label>
-    <div className="actions"><button disabled={!image||busy||!ready} onClick={saveLibrary}>Save to Library</button><button className="primary" disabled={!image||busy||!ready||!savedCurrent} onClick={addScene}>Add to Scene</button></div>
+    <div className="actions"><button disabled={!image||busy||existingBusy||!ready} onClick={saveLibrary}>Save to Library</button><button className="primary" disabled={!image||busy||existingBusy||!ready||!savedCurrent} onClick={addScene}>Add to Scene</button></div>
     {image&&!savedCurrent&&<p className="message">Save to Library before adding this token to the scene.</p>}
     <button className="download" disabled={!image||busy} onClick={download}>Download PNG</button>
     {message&&<p role="status" className="message">{message}</p>}
